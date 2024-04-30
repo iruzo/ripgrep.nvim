@@ -1,0 +1,53 @@
+name: Check for ripgrep updates
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *' # monthly
+
+permissions:
+  contents: write
+
+jobs:
+  check-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+
+      - name: Check latest ripgrep release
+        id: latest-version
+        run: |
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/BurntSushi/ripgrep/releases/latest | jq -r .tag_name)
+          echo "Latest version of ripgrep is $LATEST_VERSION"
+          echo "LATEST_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+
+      - name: Get current ripgrep version from plugin
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(cat ./rg_version)
+          echo "Current plugin version for ripgrep is $CURRENT_VERSION"
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+
+      - name: Compare versions and update if needed
+        if: env.LATEST_VERSION != env.CURRENT_VERSION
+        run: |
+          echo "${{ env.LATEST_VERSION }}" > ./rg_version
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "Update ripgrep to ${{ env.LATEST_VERSION }}"
+          git tag ${{ env.LATEST_VERSION }} -m "Release ${{ env.LATEST_VERSION }}"
+          git push origin main --tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release
+        if: env.LATEST_VERSION != env.CURRENT_VERSION
+        run: |
+          gh auth setup-git
+          gh release create ${{ env.LATEST_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
