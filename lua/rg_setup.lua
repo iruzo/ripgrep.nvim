@@ -47,7 +47,7 @@ function M.install_rg()
   elseif os_type == "Darwin" then
     if arch_type == "x86_64" then
       url = base_url .. "-x86_64-apple-darwin.tar.gz"
-    elseif arch_type == "aarch64" then
+    elseif arch_type == "aarch64" or arch_type == "arm64" then
       url = base_url .. "-aarch64-apple-darwin.tar.gz"
     else
       error("Unsupported architecture for MacOS")
