@@ -1,11 +1,10 @@
-local data_path = vim.fn.stdpath('data') .. '/ripgrep.nvim'
+local data = vim.fn.stdpath("data") .. "/ripgrep.nvim"
+local windows = vim.fn.has("win32") == 1
 
-if vim.fn.isdirectory(data_path) == 0 then
-  require('rg_setup').install_rg()
-  vim.fn.mkdir(data_path, 'p')
+if vim.fn.isdirectory(data) == 0 then
+  require("rg_setup").install_rg()
 end
 
-if vim.fn.executable('rg') == 0 then
-  local data_path = vim.fn.stdpath('data') .. '/ripgrep.nvim'
-  vim.env.PATH = vim.env.PATH .. ':' .. data_path
+if vim.fn.executable("rg") == 0 then
+  vim.env.PATH = vim.env.PATH .. (windows and ";" or ":") .. data
 end
